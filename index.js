@@ -62,6 +62,10 @@ function parseCommaParts(str) {
   return parts;
 }
 
+// console.log(parseCommaParts('{a,{b,c},d}'))
+// console.log(parseCommaParts('a,b,c,d'))
+// console.log(parseCommaParts('a,{b,c},d'))
+
 function expandTop(str) {
   if (!str)
     return [];
@@ -199,3 +203,8 @@ function expand(str, isTop) {
   return expansions;
 }
 
+// console.log(expandTop('\\{abc}'))
+// console.log(expandTop('{abc}'))
+
+// console.log(expandTop('{klklkl}{1,2,3}'))
+// console.log(expand('{klklkl}{1,2,3}'))
