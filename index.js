@@ -35,6 +35,7 @@ function unescapeBraces(str) {
 // Basically just str.split(","), but handling cases
 // where we have nested braced sections, which should be
 // treated as individual members, like {a,{b,c},d}
+// this just split on ',' but not the `,` in {}
 function parseCommaParts(str) {
   if (!str)
     return [''];
@@ -61,10 +62,6 @@ function parseCommaParts(str) {
 
   return parts;
 }
-
-// console.log(parseCommaParts('{a,{b,c},d}'))
-// console.log(parseCommaParts('a,b,c,d'))
-// console.log(parseCommaParts('a,{b,c},d'))
 
 function expandTop(str) {
   if (!str)
@@ -105,12 +102,13 @@ function expand(str, isTop) {
   var expansions = [];
 
   var m = balanced('{', '}', str);
+  // ${a,b} doesn't expand
   if (!m || /\$$/.test(m.pre)) return [str];
 
   var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
   var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
   var isSequence = isNumericSequence || isAlphaSequence;
-  var isOptions = /^(.*,)+(.+)?$/.test(m.body);
+  var isOptions = m.body.indexOf(',') >= 0;
   if (!isSequence && !isOptions) {
     // {a},b}
     if (m.post.match(/,.*\}/)) {
@@ -208,3 +206,5 @@ function expand(str, isTop) {
 
 // console.log(expandTop('{klklkl}{1,2,3}'))
 // console.log(expand('{klklkl}{1,2,3}'))
+// console.log(expand('x{{a,b}}y'))
+console.log(expand('${x,y}'))
