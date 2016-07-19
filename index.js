@@ -103,8 +103,12 @@ function expand(str, isTop) {
   var expansions = [];
 
   var m = balanced('{', '}', str);
+
   // ${a,b} doesn't expand
   if (!m || /\$$/.test(m.pre)) return [str];
+
+  // no need to expand pre, since it is guaranteed to be free of brace-sets
+  var pre = m.pre;
 
   var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
   var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
@@ -115,7 +119,7 @@ function expand(str, isTop) {
     if (m.post.match(/,.*\}/)) {
       // this can probably be optimised if we change the behaviour of `balanced-match`
       // we want m.body to be `a},b` :)
-      str = m.pre + '{' + m.body + escClose + m.post;
+      str = pre + '{' + m.body + escClose + m.post;
       // escaped the correct } and try again
       return expand(str);
     }
@@ -125,8 +129,6 @@ function expand(str, isTop) {
 
   var n;
 
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
   var post = m.post.length
     ? expand(m.post, false)
     : [''];
@@ -141,7 +143,7 @@ function expand(str, isTop) {
       n = expand(n[0], false).map(embrace);
       if (n.length === 1) {
         return post.map(function(p) {
-          return m.pre + n[0] + p;
+          return pre + n[0] + p;
         });
       }
     }
