@@ -133,9 +133,9 @@ function expand(str, isTop) {
     ? expand(m.post, false)
     : [''];
 
-  if (isSequence) {
-    n = m.body.split('..');
-  } else {
+  var N = [];
+
+  if (!isSequence) {
     // isOptions === true
     n = parseCommaParts(m.body);
     if (n.length === 1) {
@@ -147,14 +147,14 @@ function expand(str, isTop) {
         });
       }
     }
-  }
 
-  // at this point, n is the parts, and we know it's not a comma set
-  // with a single entry.
+    N = concatMap(n, function(el) { return expand(el, false) });
+  } else {
+    n = m.body.split('..');
 
-  var N;
+    // at this point, n is the parts, and we know it's not a comma set
+    // with a single entry.
 
-  if (isSequence) {
     var x = numeric(n[0]);
     var y = numeric(n[1]);
     var width = Math.max(n[0].length, n[1].length)
@@ -168,8 +168,6 @@ function expand(str, isTop) {
       test = gte;
     }
     var pad = n.some(isPadded);
-
-    N = [];
 
     for (var i = x; test(i, y); i += incr) {
       var c;
@@ -192,8 +190,6 @@ function expand(str, isTop) {
       }
       N.push(c);
     }
-  } else {
-    N = concatMap(n, function(el) { return expand(el, false) });
   }
 
   for (var j = 0; j < N.length; j++) {
