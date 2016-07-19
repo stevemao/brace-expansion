@@ -98,7 +98,7 @@ function gte(i, y) {
   return i >= y;
 }
 
-function expand(str, isTop) {
+function expand(str) {
   debugger
   var expansions = [];
 
@@ -117,7 +117,7 @@ function expand(str, isTop) {
   if (!isSequence && !isOptions) {
     // {a},b}
     if (m.post.match(/,.*\}/)) {
-      // this can probably be optimised if we change the behaviour of `balanced-match`
+      // todo: this can probably be optimised if we slightly change the behaviour of `balanced-match`
       // we want m.body to be `a},b` :)
       str = pre + '{' + m.body + escClose + m.post;
       // escaped the correct } and try again
@@ -130,17 +130,16 @@ function expand(str, isTop) {
   var n;
 
   var post = m.post.length
-    ? expand(m.post, false)
+    ? expand(m.post)
     : [''];
 
   var N = [];
 
-  if (!isSequence) {
-    // isOptions === true
+  if (isOptions) {
     n = parseCommaParts(m.body);
     if (n.length === 1) {
       // x{{a,b}}y ==> x{a}y x{b}y
-      n = expand(n[0], false).map(embrace);
+      n = expand(n[0]).map(embrace);
       if (n.length === 1) {
         return post.map(function(p) {
           return pre + n[0] + p;
@@ -148,16 +147,13 @@ function expand(str, isTop) {
       }
     }
 
-    N = concatMap(n, function(el) { return expand(el, false) });
+    N = concatMap(n, function(el) { return expand(el) });
   } else {
+    // isSequence is true
     n = m.body.split('..');
-
-    // at this point, n is the parts, and we know it's not a comma set
-    // with a single entry.
 
     var x = numeric(n[0]);
     var y = numeric(n[1]);
-    var width = Math.max(n[0].length, n[1].length)
     var incr = n.length == 3
       ? Math.abs(numeric(n[2]))
       : 1;
@@ -176,8 +172,10 @@ function expand(str, isTop) {
         if (c === '\\')
           c = '';
       } else {
+        // todo: is Math.abs() faster?
         c = String(i);
         if (pad) {
+          var width = Math.max(n[0].length, n[1].length)
           var need = width - c.length;
           if (need > 0) {
             var z = new Array(need + 1).join('0');
@@ -195,7 +193,7 @@ function expand(str, isTop) {
   for (var j = 0; j < N.length; j++) {
     for (var k = 0; k < post.length; k++) {
       var expansion = pre + N[j] + post[k];
-      if (!isTop || isSequence || expansion)
+      if (isSequence || expansion)
         expansions.push(expansion);
     }
   }
@@ -208,7 +206,8 @@ function expand(str, isTop) {
 
 // console.log(expandTop('{klklkl}{1,2,3}'))
 // console.log(expand('{klklkl}{1,2,3}'))
-console.log(expand('x{{a,b}}y'))
+// console.log(expand('x{{a,b}}y'))
 // console.log(expand('${x,y}'))
 // console.log(expand('{a},b}'))
 // console.log(expandTop('{a},b}'))
+console.log(expandTop('a{-01..5..3}b'))
