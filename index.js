@@ -99,6 +99,7 @@ function gte(i, y) {
 }
 
 function expand(str, isTop) {
+  debugger
   var expansions = [];
 
   var m = balanced('{', '}', str);
@@ -112,24 +113,33 @@ function expand(str, isTop) {
   if (!isSequence && !isOptions) {
     // {a},b}
     if (m.post.match(/,.*\}/)) {
+      // this can probably be optimised if we change the behaviour of `balanced-match`
+      // we want m.body to be `a},b` :)
       str = m.pre + '{' + m.body + escClose + m.post;
+      // escaped the correct } and try again
       return expand(str);
     }
+    // "plain" string
     return [str];
   }
 
   var n;
+
+  // no need to expand pre, since it is guaranteed to be free of brace-sets
+  var pre = m.pre;
+  var post = m.post.length
+    ? expand(m.post, false)
+    : [''];
+
   if (isSequence) {
-    n = m.body.split(/\.\./);
+    n = m.body.split('..');
   } else {
+    // isOptions === true
     n = parseCommaParts(m.body);
     if (n.length === 1) {
       // x{{a,b}}y ==> x{a}y x{b}y
       n = expand(n[0], false).map(embrace);
       if (n.length === 1) {
-        var post = m.post.length
-          ? expand(m.post, false)
-          : [''];
         return post.map(function(p) {
           return m.pre + n[0] + p;
         });
@@ -139,12 +149,6 @@ function expand(str, isTop) {
 
   // at this point, n is the parts, and we know it's not a comma set
   // with a single entry.
-
-  // no need to expand pre, since it is guaranteed to be free of brace-sets
-  var pre = m.pre;
-  var post = m.post.length
-    ? expand(m.post, false)
-    : [''];
 
   var N;
 
@@ -206,5 +210,7 @@ function expand(str, isTop) {
 
 // console.log(expandTop('{klklkl}{1,2,3}'))
 // console.log(expand('{klklkl}{1,2,3}'))
-// console.log(expand('x{{a,b}}y'))
-console.log(expand('${x,y}'))
+console.log(expand('x{{a,b}}y'))
+// console.log(expand('${x,y}'))
+// console.log(expand('{a},b}'))
+// console.log(expandTop('{a},b}'))
