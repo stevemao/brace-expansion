@@ -77,7 +77,7 @@ function expandTop(str) {
     str = '\\{\\}' + str.substr(2);
   }
 
-  return expand(escapeBraces(str), true).map(unescapeBraces);
+  return expand(escapeBraces(str)).map(unescapeBraces);
 }
 
 function identity(e) {
